@@ -1,0 +1,6 @@
+flask
+sounddevice
+RealtimeSTT
+inquirer
+requests
+pyaudio

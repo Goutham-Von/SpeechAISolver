@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Transcription</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #recordButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin-top: 5px
+        }
+
+        #transcript-text {
+            font-size: 16px; /* Increased by 2 units */
+            max-height: 90vh; /* Limit height to 50% of the viewport height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            width: 90%; /* Set a width for better alignment */
+            padding: 10px;
+            border: 1px solid #ccc; /* Optional: border for better visibility */
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        function loadTranscript() {
+            fetch('/transcription')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('transcript-text').innerText = data.answer;
+                })
+                .catch(error => console.error('Error loading transcript:', error));
+        }
+
+        loadTranscript();
+
+        setInterval(loadTranscript, 2000);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var socket = io();
+
+            var recordButton = document.getElementById('recordButton');
+            var isRecording = false;
+
+            recordButton.addEventListener('click', function() {
+                if (isRecording) {
+                    socket.emit('stop_recording');
+                    recordButton.innerText = 'Record';
+                    loadTranscript();
+                } else {
+                    socket.emit('start_recording');
+                    recordButton.innerText = 'Stop';
+                }
+                isRecording = !isRecording;
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="transcript-text"></div>
+    <button id="recordButton">Record</button>
+    <h3>Audio Transcription</h3>
+</body>
+</html>
