@@ -19,48 +19,44 @@ recorded_text = ""
 output = ""
 recorder = None
 recorder_ready = threading.Event()
+pause_recording = threading.Event()
 audio_input_index = 0
 whisper_speech_to_text_model = None
 
-
-# Audio Processing
-def onRecordStart() :
-    global recorded_text, output
-    recorded_text = ""
 
 def onRecordStop() :
     global is_recording, output, recorded_text
     recorded_text = recorder.text()
     if(recorded_text != "") :
-        print(f"Question : {recorded_text}")
         chat()
     else :
-        output = "skipped Question due to short length"
+        recorded_text = "Skipped Question due to short length !!"
+
 
 def recorder_thread():
     global recorder, recorder_ready
+    ollama.loadModel()
+    recorderConfig = {
+        'spinner': False,
+        'model': whisper_speech_to_text_model,
+        'input_device_index': audio_input_index,
+        'language': 'en',
+        'silero_sensitivity': 0.4,
+        'webrtc_sensitivity': 2,
+        'post_speech_silence_duration': 0.4,
+        'min_length_of_recording': 0,
+        'min_gap_between_recordings': 0,
+        'enable_realtime_transcription': True,
+        'realtime_processing_pause': 0.1,
+        'realtime_model_type': whisper_speech_to_text_model,
+    }
     print("Initializing RealtimeSTT...")
-    recorder = AudioToTextRecorder(
-        model=whisper_speech_to_text_model, 
-        input_device_index = audio_input_index,
-        on_recording_start=onRecordStart,
-        on_recording_stop=onRecordStop,
-        min_gap_between_recordings=3,
-        language='en',
-        silero_sensitivity= 0.4,
-        webrtc_sensitivity=2,
-        post_speech_silence_duration= 0.2
-    )
+    recorder = AudioToTextRecorder(**recorderConfig)
     print("RealtimeSTT initialized")
     recorder_ready.set()
 
 
 
-
-
-
-
-ollama.loadModel()
 def chat():
     global output, recorded_text, is_recording
     print("[+] Analysis...")
@@ -76,6 +72,10 @@ def chat():
             output += data
     print("")
 
+def appendRecordedText(text) :
+    global recorded_text
+    recorded_text += text
+
 
 # Flask Routes and socketio
 @app.route('/')
@@ -89,18 +89,20 @@ def get_transcription():
 
 @socketio.on('start_recording')
 def start_recording():
-    global is_recording
+    global is_recording, recorded_text, recorder
     print("\n\nListening...")
+    recorded_text = ""
     is_recording = True
-    resetAudioStream(recorder)
-    recorder.start()
+    pause_recording.clear()
+    while not pause_recording.is_set() :
+        recorder.text(appendRecordedText)
 
 @socketio.on('stop_recording')
 def stop_recording():
-    global is_recording
+    global is_recording, recorder
     is_recording = False
-    stopAudioStream(recorder)
-    recorder.stop()
+    pause_recording.set()
+    chat()
 
 def audioPrompt() :
     global audio_input_index
