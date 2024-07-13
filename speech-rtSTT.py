@@ -39,6 +39,7 @@ def onRecordStop() :
 
 def recorder_thread():
     global recorder, recorder_ready
+    ollama.loadModel()
     print("Initializing RealtimeSTT...")
     recorder = AudioToTextRecorder(
         model=whisper_speech_to_text_model, 
@@ -57,10 +58,6 @@ def recorder_thread():
 
 
 
-
-
-
-ollama.loadModel()
 def chat():
     global output, recorded_text, is_recording
     print("[+] Analysis...")
