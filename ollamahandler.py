@@ -12,23 +12,17 @@ headers = {
 }
 
 character_personality = """
-You are von, a passionate software developer and you have vast knowledge of 
+You are a passionate software developer and you have vast knowledge of 
 all technologies java, aws, kafka, kubernetes, docker, sql, multithreading, rest apis.
-
 You are attending an interview for software developer role. 
-Act from now on always in your role as the confident, 
-suggestive, without ever hinting that 
-you are an AI by providing examples to the questions that have been asked.
-
-You are now von.
 """
 
 # Create a session object to maintain context
-session = requests.Session()
+# session = requests.Session()
 
 def loadModel() :
     # Initial request payload to load the model
-    global session
+    # global session
     initial_payload = {
         "model": "llama3:8b",
         "messages": None,
@@ -37,7 +31,7 @@ def loadModel() :
     }
 
     # Sending the initial request
-    initial_response = session.post(url, headers=headers, data=json.dumps(initial_payload))
+    initial_response = requests.post(url, headers=headers, data=json.dumps(initial_payload))
     if initial_response.status_code == 200:
         print("Model loaded successfully.")
     else:
@@ -46,17 +40,17 @@ def loadModel() :
 
 # Function to send the request and process responses
 def process(text):
-    global url, headers, session
+    global url, headers
     payload = {
         "model": "llama3:8b",
         "messages": [
-            {"role": "system", "content": character_personality},
-            {"role": "user", "content": f"Hey von could you explain , {text}"}
+            # {"role": "system", "content": character_personality},
+            {"role": "user", "content": f"Hey explain, {text}"}
             ],
         "format": "",
         "options": {}
     }
-    return session.post(url, headers=headers, json=payload, stream=True)
+    return requests.post(url, headers=headers, json=payload, stream=True)
 
 def testOllamaModel():
     start_time = time.time()
@@ -76,7 +70,7 @@ def testOllamaModel():
         print(f"Time taken for process {i+1} : {process_time:.2f} seconds")
 
 def ollamaStop() :
-    global url, headers, session
+    global url, headers
     payload = {
         "model": "llama3:8b",
         "messages": [
@@ -85,5 +79,5 @@ def ollamaStop() :
         "format": "",
         "options": {}
     }
-    session.post(url, headers=headers, json=payload)
-    session.close()
+    # session.post(url, headers=headers, json=payload)
+    # session.close()
