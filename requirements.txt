@@ -1,6 +1,6 @@
 flask
 sounddevice
-RealtimeSTT
 inquirer
 requests
 pyaudio
+speech_recognition
