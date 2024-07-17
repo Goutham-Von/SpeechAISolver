@@ -47,7 +47,7 @@ clear_screen
 
 # Step 5: Run the Python script
 echo "Running main py..."
-python speech-rtSTT.py
+python SimpleGoogleSpeech.py --debug False
 if [ $? -eq 0 ]; then
     echo "Python script ran successfully."
 else
