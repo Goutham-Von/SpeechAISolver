@@ -29,6 +29,8 @@ class AudioRecording :
     def audio_to_text(self):
         if debug:
             print('[+] transcribing...')
+        if hasattr(self, 'frames') == False :
+            return ""
         audio_data = b''.join(self.frames)
         audio = sr.AudioData(audio_data, AudioRecording.RATE, 2)
         text = self.recognizer.recognize_google(audio)
@@ -36,7 +38,8 @@ class AudioRecording :
         
     def stop(self):
         self.is_recording.clear()
-        self.recording_thread.join()
+        if self.recording_thread : 
+            self.recording_thread.join()
         return self.audio_to_text()
         
     def start(self):
@@ -48,6 +51,7 @@ class AudioRecording :
                 frames_per_buffer=AudioRecording.CHUNK,
                 input_device_index=self.input_device_index
             )
+        print("[+] stream created")
         self.is_recording.set()
         self.recording_thread = threading.Thread(target=self.record_audio)
         self.recording_thread.start()
@@ -71,6 +75,9 @@ chat_thread = None
 def chat():
     global recorded_text, output, is_recording, audioRecorder
     recorded_text = audioRecorder.stop()
+    if recorded_text == "" :
+        output += "No Input Data"
+        return 
     if debug :
         print(f'\n\nQuestion : {recorded_text}')
     response = ollama.process(recorded_text)
