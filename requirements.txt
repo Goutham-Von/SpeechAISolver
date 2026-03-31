@@ -4,3 +4,4 @@ inquirer
 requests
 pyaudio
 speech_recognition
+pyyaml
